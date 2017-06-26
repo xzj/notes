@@ -1,0 +1,13 @@
+* agent
+    1. 关于　release-pending-sends
+
+    在一个　action 里面　send 另一个　action，后者是　pending 的，不会发到目标　agent 的　queue 中。要等到第一个　action 完成，第二个　action 才会发到目标　agent 的　queue. 所以，如果第一个　action 不能完成，比如抛出了　exception，第二个　action 就不会　send 出去。 release-pending-sends 可以提前把第二个　send 发出去。
+
+    (def a (agent 3))
+    (def b (agent 4))
+    (send a (fn [v] (send b dec) (/ 1 0))) ; (send b dec) 不会发出去，没有事情发生
+    (send a (fn [v] (send b dec) (release-pending-sends) (/ 1 0))) ; (send b dec) 会发出去
+
+    2. 在　error-handler 里面不能用　restart-agent 去恢复这个出错的　agent，因为此时该　agent 的状态不是　failed(即使它的　error-mode 是　:fail)
+
+    3. 在　action 里面不能调用　await，会出　exception. 估计是为了防止死锁。
